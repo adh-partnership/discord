@@ -1,0 +1,67 @@
+#!/bin/bash
+
+set -ex
+
+dir="$(cd "$(dirname "$0")" && pwd)"
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+    --tag)
+        TAG="$2"
+        shift 2
+        ;;
+    --image)
+        IMAGE="$2"
+        shift 2
+        ;;
+    --hub)
+        HUB="$2"
+        shift 2
+        ;;
+    --push)
+        PUSH=1
+        shift
+        ;;
+    --env)
+        ENV="$2"
+        shift 2
+        ;;
+    --help)
+        echo "Usage: docker [--tag <tag>] [--image <image>] [--hub <hub>] [--push]"
+        echo "  --tag <tag>      Tag to use for the image (defaults to env)"
+        echo "  --image <image>  Docker image to build (defaults to 'discord')"
+        echo "  --env <env>      Environment to build for (no default, required)"
+        echo "  --hub <hub>      Docker hub to push to (defaults to 'docker.io/adhp') [example: docker.io/username]"
+        echo "  --push           Push the image to the hub"
+        echo "  --help: show this help message and exit"
+        exit 0
+        ;;
+    *)
+        echo "Unknown argument: $1"
+        exit 1
+        ;;
+    esac
+done
+
+ENV=${ENV:-}
+
+if [[ -z "$ENV" ]]; then
+    echo "Must specify --env"
+    exit 1
+fi
+
+HUB=${HUB:-docker.io/adhp}
+IMAGE=${IMAGE:-discord}
+TAG=${TAG:-$ENV}
+
+if [[ ! -z "$HUB" ]]; then
+    HUB="$HUB/"
+fi
+
+pushd $dir/..
+
+docker build --build-arg env_file=.env.$ENV . -t $HUB$IMAGE:$TAG
+
+if [[ ! -z "$PUSH" ]]; then
+    docker push $HUB$IMAGE:$TAG
+fi

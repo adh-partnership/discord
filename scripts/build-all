@@ -1,0 +1,50 @@
+#!/bin/bash
+
+set -ex
+
+dir="$(cd "$(dirname "$0")" && pwd)"
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+    --image)
+        IMAGE="$2"
+        shift 2
+        ;;
+    --hub)
+        HUB="$2"
+        shift 2
+        ;;
+    --push)
+        PUSH=1
+        shift
+        ;;
+    --help)
+        echo "Usage: $0 [--image <image>] [--hub <hub>] [--push]"
+        echo "  --image <image>  Docker image to build (defaults to 'discord')"
+        echo "  --hub <hub>      Docker hub to push to (defaults to 'docker.io/adhp') [example: docker.io/username]"
+        echo "  --push           Push the image to the hub"
+        echo "  --help: show this help message and exit"
+        exit 0
+        ;;
+    *)
+        echo "Unknown argument: $1"
+        exit 1
+        ;;
+    esac
+done
+
+HUB=${HUB:-docker.io/adhp}
+IMAGE=${IMAGE:-discord}
+
+pushd "$dir/.."
+
+facilities=(hcf zan)
+
+for env in "${facilities[@]}";
+do
+    if [[ ! -z "$PUSH" ]]; then
+        args="--push"
+    fi
+
+    ./scripts/docker --image "$IMAGE" --hub "$HUB" --env $env $args
+done
