@@ -38,7 +38,7 @@ IMAGE=${IMAGE:-discord}
 
 pushd "$dir/.."
 
-facilities=(hcf zan)
+facilities=(hcf zan zdv zlc)
 
 for env in "${facilities[@]}";
 do
